@@ -15,15 +15,7 @@ namespace RomansTask
         {
             if (img == null || item == null) throw new Exception("Empty params!");
             Mat image = new Mat(img.ToString(), ImreadModes.Grayscale);
-            HierarchyIndex[] hz;
-            OpenCvSharp.Point[][] vec;
             Cv2.Blur(image, image, new OpenCvSharp.Size(4, 4));
-            //Cv2.Canny(image, image, 0.09, 255);
-            //Cv2.FindContours(image, out vec, out hz, RetrievalModes.Tree, ContourApproximationModes.ApproxNone);
-            //for (int i = 0; i < vec.Length; ++i)
-            //{
-            //    Cv2.DrawContours(image, vec, i, new Scalar(255, 255, 255));
-            //}
             Mat result = new Mat(img, ImreadModes.Color);
             Mat template = new Mat(item, ImreadModes.Grayscale);
             if (image.Cols <= template.Cols || image.Rows <= template.Rows)
