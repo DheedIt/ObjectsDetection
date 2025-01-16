@@ -10,14 +10,13 @@ namespace RomansTask
 {
     class Program
     {
-        static void Main(string[] args) // Source - Template
-        {
-           
-           
-                int res = Solution.ObjectsCount("C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img101.png", "C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img200.png",150);
-                Console.WriteLine(res);
-            
-        }
+        static void Main(string[] args,int limiter) =>
+                Console.WriteLine(Solution.ObjectsCount(args[0], args[1],limiter));
+        static void Main(string[] args, int limiter, bool showDiff) =>
+               Console.WriteLine(Solution.ObjectsCount(args[0], args[1], limiter, showDiff));
+        static void Main(string[] args) =>
+               Console.WriteLine(Solution.ObjectsCount(args[0], args[1]));
+
     }
 
 }
