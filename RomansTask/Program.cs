@@ -12,9 +12,11 @@ namespace RomansTask
     {
         static void Main(string[] args) // Source - Template
         {
-            Solution cl = new Solution();
-            var res = cl.ObjectsCount(args[0], args[1]);
-            Console.WriteLine(res);
+           
+           
+                int res = Solution.ObjectsCount("C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img101.png", "C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img200.png",150);
+                Console.WriteLine(res);
+            
         }
     }
 
