@@ -10,12 +10,12 @@ namespace RomansTask
 {
     class Program
     {
-        static void Main(string[] args,int limiter) =>
-                Console.WriteLine(Solution.ObjectsCount(args[0], args[1],limiter));
-        static void Main(string[] args, int limiter, bool showDiff) =>
-               Console.WriteLine(Solution.ObjectsCount(args[0], args[1], limiter, showDiff));
-        static void Main(string[] args) =>
-               Console.WriteLine(Solution.ObjectsCount(args[0], args[1]));
+        static int Main(string[] args){
+           return Solution.ObjectsCount("C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img101.png", "C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img200.png", 30);
+                        // Solution.ObjectsCount("Way-to-image", "Way-to-template-to-be-found", 0);
+
+        }
+        
 
     }
 
