@@ -5,20 +5,18 @@ namespace RomansTask
 {
     public class Solution
     {
-        static private void CreateContours(Mat imageClone,Mat templateClone)
+        static private void CreateContours(Mat imageClone,Mat templateClone) // обработка фотографий
         {
-            Mat cannImage = imageClone;
-            Mat cannyTemplate = templateClone;
-            Cv2.Blur(cannyTemplate, cannyTemplate, new OpenCvSharp.Size(2, 2));
-            Cv2.Blur(cannImage, cannImage, new OpenCvSharp.Size(2, 2));
-            Cv2.Canny(cannyTemplate, cannyTemplate, 200, 255);
-            Cv2.Canny(cannImage, cannImage, 200, 255);
+            Cv2.Blur(templateClone, templateClone, new OpenCvSharp.Size(2, 2)); // Блюр
+            Cv2.Blur(imageClone, imageClone, new OpenCvSharp.Size(2, 2));
+            Cv2.Canny(templateClone, templateClone, 200, 255); // Поиск краев на фото
+            Cv2.Canny(imageClone, imageClone, 200, 255);
         }
         static public int ObjectsCount(string img, string item, int limitOfCycles)
         {
             if (img == null || item == null) throw new Exception("Empty params!");
-            Mat image = Cv2.ImRead(img, ImreadModes.Grayscale);
-            image.ConvertTo(image, MatType.CV_8UC1);
+            Mat image = Cv2.ImRead(img, ImreadModes.Grayscale); // считывание фотографии и перевод в черно белый цвет
+            image.ConvertTo(image, MatType.CV_8UC1); // перевод фотографии в 8 битный формат
             Mat template = Cv2.ImRead(item, ImreadModes.Grayscale);
             template.ConvertTo(template, MatType.CV_8UC1);
             int templateRows = template.Rows, templateCols = template.Cols;
@@ -27,33 +25,36 @@ namespace RomansTask
             int countOfFoundTepmlates = 0;
             int timeOut = 0;
 
-            OpenCvSharp.Point minLocOfTemplate, maxLocOfTemplate, matchLocOfTemplate;
+            OpenCvSharp.Point minLocOfTemplate;
             Mat foundObject;
-            Mat metchResult = image.EmptyClone();
+            Mat metchResult = image.EmptyClone(); // пустой шаблон чтоб записать туда результат поиска шаблона (картинка имет спецефичный вид по этому нужна отдельная переменная)
             CreateContours(image,template);
          
             while (countOfFoundTepmlates < limitOfCycles)
             {
-                Cv2.MatchTemplate(image, template, metchResult, TemplateMatchModes.SqDiff);
-                Cv2.MinMaxLoc(metchResult, out _, out _, out minLocOfTemplate, out maxLocOfTemplate, new Mat());
-                matchLocOfTemplate = minLocOfTemplate;
-                foundObject = new Mat(image, new OpenCvSharp.Rect(matchLocOfTemplate, template.Size()));
-                Cv2.ImShow("found",foundObject);
-                Cv2.ImShow("template",template);
-                Cv2.ImShow("image",image);
+                Cv2.MatchTemplate(image, template, metchResult, TemplateMatchModes.SqDiff); // поиск шаблонов
+                Cv2.MinMaxLoc(metchResult, out _, out _, out minLocOfTemplate, out _, new Mat()); // поиск минимальной координаты, где находится нужный шаблон
+                foundObject = new Mat(image, new OpenCvSharp.Rect(minLocOfTemplate, template.Size())); // найденный шаблон
+                // Cv2.ImShow("found",foundObject);
+                // Cv2.ImShow("template",template);
+                // Cv2.ImShow("image",image);
                 // Cv2.WaitKey();
-                if (foundObject.CountNonZero() <= template.CountNonZero() * 0.80)
+                if (foundObject.CountNonZero() <= template.CountNonZero() * 0.80) // отсвеевание неподходящих шаблонов
                 {
                     if (timeOut == 10)
                         return countOfFoundTepmlates;
                     timeOut += 1;
-                    Cv2.Rectangle(image, matchLocOfTemplate, new OpenCvSharp.Point(matchLocOfTemplate.X + templateCols, matchLocOfTemplate.Y + templateRows), new Scalar(0, 0, 0), -1, LineTypes.Link8, 0);
+                    Cv2.Rectangle(image, minLocOfTemplate, 
+                        new OpenCvSharp.Point(minLocOfTemplate.X + templateCols, minLocOfTemplate.Y + templateRows),
+                         new Scalar(0, 0, 0), -1, LineTypes.Link8, 0); // Закрашивание найденного шаблона
                 }
                 else
                 {
                 //Console.WriteLine(Cv2.Norm(template,foundObject,NormTypes.L3));
                     countOfFoundTepmlates += 1;
-                    Cv2.Rectangle(image, matchLocOfTemplate, new OpenCvSharp.Point(matchLocOfTemplate.X + templateCols, matchLocOfTemplate.Y + templateRows), new Scalar(0, 0, 0), -1, LineTypes.Link8, 0);
+                    Cv2.Rectangle(image, minLocOfTemplate, 
+                        new OpenCvSharp.Point(minLocOfTemplate.X + templateCols, minLocOfTemplate.Y + templateRows), 
+                            new Scalar(0, 0, 0), -1, LineTypes.Link8, 0);
                     timeOut = 0;
                 }
             }
