@@ -6,8 +6,8 @@ public static class Program
     {
 		try
 		{
-            string? imagePath = Console.ReadLine();
-            string? templatePath = Console.ReadLine();
+            string? imagePath = "C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img1.png";
+            string? templatePath = "C:\\Users\\zhula\\source\\repos\\RomansTask\\RomansTask\\Pictures\\img0001.png";
             if (!File.Exists(imagePath) || !File.Exists(templatePath))
                 throw new FileNotFoundException("Не найден указанный файл");
             int count = OpenCVExtension.FindTemplatesCount(imagePath, templatePath);

@@ -16,56 +16,92 @@ public static class OpenCVExtension
     /// <exception cref="Exception">Вызывается если шаблон больше изображения</exception>
     private static bool TryGetImageTemplate(string imagePath, string templatePath, out Mat image, out Mat template)
     {
-        image = Cv2.ImRead(imagePath, ImreadModes.Grayscale);
-        template = Cv2.ImRead(templatePath, ImreadModes.Grayscale);
-        image.ConvertTo(image, MatType.CV_8UC1);
-        template.ConvertTo(template, MatType.CV_8UC1);
-        if (image.Empty() || template.Empty())
+		image = Cv2.ImRead(imagePath);
+		template = Cv2.ImRead(templatePath);
+
+        if (template.Empty() || image.Empty())
             throw new ArgumentException("Invalid arguments.");
         if (image.Cols <= template.Cols || image.Rows <= template.Rows)
             throw new Exception("The size of the template must not exceed or match the size of the original template.");
         return true;
-    }
+	}
 
-    /// <summary>
-    /// Поиск шаблонов в изображении
-    /// </summary>
-    /// <param name="imagePath">Путь к изображению</param>
-    /// <param name="templatePath">Путь к шаблону</param>
-    /// <returns>Возвращает количество найденных шаблонов в изображении</returns>
-    /// <exception cref="ArgumentException">Вызывается при не верном пути к файлу</exception>
-    /// <exception cref="Exception">Вызывается если шаблон больше изображения</exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    public static int FindTemplatesCount(string imagePath, string templatePath)
+	/// <summary>
+	/// Поиск шаблонов в изображении
+	/// </summary>
+	/// <param name="imagePath">Путь к изображению</param>
+	/// <param name="templatePath">Путь к шаблону</param>
+	/// <returns>Возвращает количество найденных шаблонов в изображении</returns>
+	/// <exception cref="ArgumentException">Вызывается при не верном пути к файлу</exception>
+	/// <exception cref="Exception">Вызывается если шаблон больше изображения</exception>
+	/// <exception cref="InvalidOperationException"></exception>
+	public static int FindTemplatesCount(string imagePath, string templatePath)
     {
         if (!TryGetImageTemplate(imagePath, templatePath, out Mat image, out Mat template))
             throw new InvalidOperationException();
+		// -------------------------------------------------------------
+		// Возможно создать новые матрицы (2 аргумент вызываемых методов)
 
-        // Возможно создать новые матрицы (2 аргумент вызываемых методов)
-        Cv2.Blur(image, image, new Size(2, 2));
-        Cv2.Canny(image, image, 200, 255);
-        Cv2.Blur(template, template, new Size(2, 2));
-        Cv2.Canny(template, template, 200, 255);
-        // -------------------------------------------------------------
+		//Cv2.GaussianBlur(image, image, new Size(5, 5), 0);
+		//Cv2.GaussianBlur(template, template, new Size(5, 5), 0);
+		////Cv2.Canny(image, image, 200, 255);
+		//Cv2.Canny(template, template, 200, 255);
 
-        int countOfFoundTepmlates = 0;
-        int timeOut = 0;
-        while (timeOut != 10) //TODO: Продумать логику
+
+		int resultCols = image.Cols - template.Cols + 1;
+		int resultRows = image.Rows - template.Rows + 1;
+
+		Mat result = image.EmptyClone();
+		Cv2.MatchTemplate(image, template, result, TemplateMatchModes.CCoeffNormed);
+		//Cv2.MinMaxLoc(result, out double minVal, out double maxVal, out Point minLoc, out Point maxLoc);
+
+		//Point matchTopLeft = maxLoc;
+		//Rect matchRect = new Rect(matchTopLeft.X, matchTopLeft.Y, ColoredTemplate.Cols, ColoredTemplate.Rows);
+
+		//Cv2.Rectangle(ColoredImage, matchRect, Scalar.Red, 2);
+
+		//Cv2.ImWrite("match_single_result.jpg", ColoredImage);
+
+		//Mat CopiedGrayImage = GrayImage.Clone();
+
+
+		List<OpenCvSharp.Rect> foundTemplates = [];
+
+        double threshold = 0.5;
+		bool reakFlag = false;
+		int i = 0;
+		while (true)
         {
-            Mat metchResult = image.EmptyClone();
-            Cv2.MatchTemplate(image, template, metchResult, TemplateMatchModes.SqDiff); // поиск шаблонов
-            Cv2.MinMaxLoc(metchResult, out _, out _, out Point minLocOfTemplate, out _); // поиск минимальной координаты, где находится нужный шаблон
-            Mat foundObject = new(image, new Rect(minLocOfTemplate, template.Size())); // найденный шаблон
-            if (foundObject.CountNonZero() > template.CountNonZero() * 0.80) // отсвеевание неподходящих шаблонов
-            {
-                countOfFoundTepmlates += 1;
-                timeOut = 0;
-            }
-            else timeOut += 1;
-            Cv2.Rectangle(image, minLocOfTemplate,
-                new Point(minLocOfTemplate.X + template.Cols, minLocOfTemplate.Y + template.Rows),
-                    new Scalar(0, 0, 0), -1, LineTypes.Link8, 0);
-        }
-        return countOfFoundTepmlates;
+			Cv2.MinMaxLoc(result, out double minVal, out double maxVal, out Point minLoc, out Point maxLoc);
+			if (maxVal < threshold)
+				break;
+
+            OpenCvSharp.Point TopLeftCorner = maxLoc;
+            OpenCvSharp.Rect foundObject = new(TopLeftCorner.X, TopLeftCorner.Y, template.Cols, template.Rows);
+			foreach (var Rectangle in foundTemplates)
+			{
+				if (Rectangle.IntersectsWith(foundObject))
+				{
+					reakFlag = true;
+					break;
+				}
+			}
+			if (reakFlag)
+			{
+				Cv2.Rectangle(image, foundObject, Scalar.Black, -1);
+				result.SubMat(foundObject).SetTo(Scalar.Black);
+				reakFlag = false;
+				continue;
+			}
+			foundTemplates.Add(foundObject);
+			Cv2.Rectangle(image, foundObject, Scalar.Black, -1);
+			result.SubMat(foundObject).SetTo(Scalar.Black);
+			//Cv2.PutText(image, $"{maxVal:F2} + {i}", new Point(foundObject.X, foundObject.Y), HersheyFonts.HersheySimplex, 0.5, Scalar.Red, 1);
+			//Cv2.ImWrite($"Photos\\Gg{i}.png", image);
+			++i;
+		}
+        return i;
     }
+
+ 
 }
