@@ -42,28 +42,21 @@ public static class OpenCVExtension
 		// -------------------------------------------------------------
 		// Возможно создать новые матрицы (2 аргумент вызываемых методов)
 
-		//Cv2.GaussianBlur(image, image, new Size(5, 5), 0);
-		//Cv2.GaussianBlur(template, template, new Size(5, 5), 0);
-		////Cv2.Canny(image, image, 200, 255);
-		//Cv2.Canny(template, template, 200, 255);
-
-
 		int resultCols = image.Cols - template.Cols + 1;
 		int resultRows = image.Rows - template.Rows + 1;
 
+		List<Mat> PartsOfImage = new List<Mat>();
+
+		var condition = PartsOfImage.Count == 0;
+
+
+		for(int j = 0; j < 4; ++j)
+		{
+			//Mat part = PartsOfImage.Count == 0 ? new(image, new Rect() : new(image, new Rect(new Point (image.Size().Width / 2 - template.Width, image.Size().Height)));
+		}
+
 		Mat result = image.EmptyClone();
-		Cv2.MatchTemplate(image, template, result, TemplateMatchModes.CCoeffNormed);
-		//Cv2.MinMaxLoc(result, out double minVal, out double maxVal, out Point minLoc, out Point maxLoc);
-
-		//Point matchTopLeft = maxLoc;
-		//Rect matchRect = new Rect(matchTopLeft.X, matchTopLeft.Y, ColoredTemplate.Cols, ColoredTemplate.Rows);
-
-		//Cv2.Rectangle(ColoredImage, matchRect, Scalar.Red, 2);
-
-		//Cv2.ImWrite("match_single_result.jpg", ColoredImage);
-
-		//Mat CopiedGrayImage = GrayImage.Clone();
-
+		Cv2.MatchTemplate(image, template, result, TemplateMatchModes.CCoeffNormed); //Поделить на части на помещение 5 template в 1 точке +- template по размерам чтоб не было срезов 
 
 		List<OpenCvSharp.Rect> foundTemplates = [];
 
@@ -72,11 +65,9 @@ public static class OpenCVExtension
 		int i = 0;
 		while (true)
         {
-			Cv2.MinMaxLoc(result, out double minVal, out double maxVal, out Point minLoc, out Point maxLoc);
+			Cv2.MinMaxLoc(result, out double minVal, out double maxVal, out Point minLoc, out Point TopLeftCorner);
 			if (maxVal < threshold)
 				break;
-
-            OpenCvSharp.Point TopLeftCorner = maxLoc;
             OpenCvSharp.Rect foundObject = new(TopLeftCorner.X, TopLeftCorner.Y, template.Cols, template.Rows);
 			foreach (var Rectangle in foundTemplates)
 			{
@@ -88,16 +79,12 @@ public static class OpenCVExtension
 			}
 			if (reakFlag)
 			{
-				Cv2.Rectangle(image, foundObject, Scalar.Black, -1);
 				result.SubMat(foundObject).SetTo(Scalar.Black);
 				reakFlag = false;
 				continue;
 			}
 			foundTemplates.Add(foundObject);
-			Cv2.Rectangle(image, foundObject, Scalar.Black, -1);
 			result.SubMat(foundObject).SetTo(Scalar.Black);
-			//Cv2.PutText(image, $"{maxVal:F2} + {i}", new Point(foundObject.X, foundObject.Y), HersheyFonts.HersheySimplex, 0.5, Scalar.Red, 1);
-			//Cv2.ImWrite($"Photos\\Gg{i}.png", image);
 			++i;
 		}
         return i;
